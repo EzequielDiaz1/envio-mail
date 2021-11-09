@@ -1,12 +1,12 @@
-import Opciones from "./Opciones";
 import emailjs from "emailjs-com";
+import Swal from "sweetalert2";
 import { useState } from "react";
+import { Formik, Field, Form } from "formik";
 
 const div1Style = {
   height: "500px",
   width: "900px",
   backgroundColor: "rgba(255,255,255,0.7)",
-  marginTop: "100px",
   borderRadius: "10px",
   display: "flex",
   flexDirection: "column",
@@ -14,23 +14,24 @@ const div1Style = {
 };
 
 function Carga() {
-  const frmContact = { user_name: "", user_email: "", message: "" };
-  const [contact, setContact] = useState(frmContact);
-  const [msg, setMsg] = useState("");
+  const errors = {};
 
-  const sendEmail = (e) => {
-    e.preventDefault();
-
+  const sendEmail = (values) => {
     emailjs
       .send(
         "service_nl8109o",
         "template_hum7j2r",
-        contact,
+        values,
         "user_0qm6Dm0hCAVMxnH10E16F"
       )
       .then(
         (result) => {
-          console.log(result);
+          Swal.fire({
+            icon: "success",
+            title: "El correo fue envíado correctamente",
+            showConfirmButton: false,
+            timer: 1500,
+          });
         },
         (error) => {
           console.log(error.text);
@@ -38,50 +39,68 @@ function Carga() {
       );
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setContact({ ...contact, [name]: value });
-  };
-
-  const handleChangeMsg = (e) => {
-    setMsg(e.target.value);
-    console.log(msg);
-  };
-
   return (
-    <form style={div1Style} onSubmit={sendEmail}>
-      <div>
-        <h6>Tu nombre</h6>
-        <input
-          type="text"
-          name="user_name"
-          style={{ width: "70%" }}
-          onChange={handleChange}
-        />
-      </div>
-      <div>
-        <h6>Correo</h6>
-        <input
-          type="email"
-          name="user_email"
-          style={{ width: "70%" }}
-          onChange={handleChange}
-        />
-      </div>
+    <div>
+      <h2
+        style={{
+          marginTop: "10px",
+          fontFamily: "Bebas Neue, cursive",
+          fontSize: "64px",
+        }}
+      >
+        Ezequiel Diaz - Project Send Email
+      </h2>
+      <Formik
+        initialValues={{ user_name: "", user_email: "", message: "" }}
+        validate={(values) => {
+      
 
-      <div style={{ marginTop: "20px" }}>
-        <h6>Texto a enviar</h6>
-        <textarea
-          name="message"
-          style={{ width: "70%", maxHeight: "100px" }}
-          onChange={handleChange}
-        />
-      </div>
-      <Opciones setMensaje={(msg) => setMsg(msg)} contenido={contact.message} />
-      <div>
-        <button class="btn btn-primary">Enviar</button>
-      </div>
-    </form>
+          // We need a name
+          if (!values.user_name)
+            errors.user_name = "Debe completar este campo obligatoriamente";
+
+          // We need a valid e-mail
+          if (!values.user_email)
+            errors.user_email = "Debe completar este campo obligatoriamente";
+          else if (
+            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.user_email)
+          )
+            errors.user_email =
+              "La dirección de correo electrónico no es valida";
+
+          return errors;
+        }}
+        onSubmit={(values) => {
+          sendEmail(values);
+        }}
+      >
+        <Form style={div1Style}>
+          <div>
+            <h6>Tu nombre</h6>
+            <Field
+              type="text"
+              name="user_name"
+              style={{ width: "70%" }}
+              required
+            />
+          </div>
+          <div>
+            <h6>Correo</h6>
+            <Field type="email" name="user_email" style={{ width: "70%" }} required />
+          </div>
+
+          <div>
+            <h6>Texto a enviar</h6>
+            <Field name="message" style={{ width: "70%" }} required />
+          </div>
+          <div>
+            <button type="submit" className="btn btn-primary">
+              Enviar
+            </button>
+          </div>
+        </Form>
+      </Formik>
+    </div>
   );
 }
 
